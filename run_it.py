@@ -9,8 +9,9 @@ if __name__ == '__main__':
     second_result = inter.second_line_brains(first_result, type, second_phrase)
 
     
-    # print(wlib.temperature_air(second_result, 'F', 24, 'max'))
+    print(wlib.temperature_air(second_result, 'F', 24, 'max'))
     print(wlib.temperature_feels(second_result, 'F', 24, 'max'))
+    print(wlib.humidity(second_result,24,'max'))
 
 
 

@@ -76,6 +76,59 @@ def convert(temp: float, desired_output: str) -> float:
         print('invalid desired output')
         return(None)
 
+def minmaxxingthis(list_to_worry: [list], min_or_max: str) -> (int, float):
+    '''
+    my attempt at making this more efficient. I kept copy pasting
+    this stupid part so i just made it more efficient, hence the
+    name of "min maxxing." its a common tacting in mmorpgs to try
+    to find the most optimal setup on a characer, every minimum and
+    maximum possible. i love puns and i love mmorpgs. 
+    '''
+    index_to_record = 0
+    if min_or_max.strip().lower() == 'min':
+        ret = min(list_to_worry)
+        index_to_record = find_min(list_to_worry)
+    elif min_or_max.strip().lower() == 'max':
+        ret = max(list_to_worry)
+        index_to_record = find_max(list_to_worry)
+    else:
+        print('did not type min or max')
+        return None
+    
+    return(index_to_record, ret)
+
+def find_max(vals: [float]) -> int:
+    '''
+    finds index of max value
+    '''
+    max_index = 0
+    for x in range(len(vals)):
+        if vals[x] > vals[max_index]:
+            max_index = x
+    
+    return max_index
+
+def find_min(vals: [float]) -> int:
+    '''
+    finds index of min value
+    '''
+    min_index = 0
+    for x in range(len(vals)):
+        if vals[x] < vals[min_index]:
+            min_index = x
+    
+    return min_index
+
+def package_to_return(special_index: int, val) -> tuple:
+    '''
+    essentially packages up what i want to return in the
+    general weather lib third line functions. makes it consistent
+    and so i dont have to repeat the same thing over and over
+    '''
+    if type(val) == float or type(val) == int:
+        return((special_index, format(val, '.4f')))
+    else:
+        return((special_index, val))
 
 def temperature_air(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> int:
     '''
@@ -89,20 +142,13 @@ def temperature_air(json_file: {dict}, temp_type: str, time_length: int, min_or_
         val = json_file[x]['temperature']
         temps.append(val)
     
-
-    if min_or_max.strip().lower() == 'min':
-        ret = min(temps)
-    elif min_or_max.strip().lower() == 'max':
-        ret = max(temps)
-    else:
-        print('did not type min or max')
-        return None
+    index_to_record, ret = minmaxxingthis(temps, min_or_max)
     
 
     if(json_file[0]['temperatureUnit']) != temp_type:
         ret = convert(float(ret), temp_type.strip().upper())
     
-    return ret
+    return package_to_return(index_to_record, ret)
 
 
 def temperature_feels(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> float:
@@ -144,17 +190,28 @@ def temperature_feels(json_file: {dict}, temp_type: str, time_length: int, min_o
             res = temp
 
         feels_like.append(res)
-    print(feels_like)
 
-    if min_or_max.strip().lower() == 'min':
-        ret = min(feels_like)
-    elif min_or_max.strip().lower() == 'max':
-        ret = max(feels_like)
-    else:
-        print('did not type min or max')
-        return None
+    index_to_record,ret = minmaxxingthis(feels_like, min_or_max)
     
     if(json_file[0]['temperatureUnit']) != temp_type:
         ret = convert(float(ret), temp_type.strip().upper())
     
-    return(round(ret,4))
+    return package_to_return(index_to_record, ret)
+
+
+def humidity(json_file: {dict}, time_length: int, min_or_max: str) -> str:
+    '''
+    collects all the humidity values in teh time length asked for
+    and tehn finds either the minimum or maximum of the list.
+    returns it as the value + % cause it looks nice
+    '''
+    humid_list = []
+    index_to_record = 0
+    for x in range(time_length):
+        period = json_file[x]
+        humid_list.append((period['relativeHumidity']['value']))
+    
+    index_to_record, ret = minmaxxingthis(humid_list, min_or_max)
+    
+    return package_to_return(index_to_record, (str(format(ret, '.4f')) + '%'))
+
