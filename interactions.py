@@ -1,17 +1,7 @@
 import nominatim_lib as nomlib
 import weather_lib as wlib
+from datetime import datetime, timezone
 
-def file_test():
-    # inp = input('TARGET NOMINATIM ')
-    # inp = ('donald bren hall, irvine')
-    inp = 'nominatim_center.json'
-
-    #lat, long = server.nominatim_search(inp)
-    
-    lat, long = nomlib.nominatim_file(inp)
-    fart_noise = wlib.weather_cords(float(lat),float(long))
-
-    wlib.hour_info(fart_noise)
 
 def first_line_input() -> (str, int):
     '''
@@ -70,35 +60,53 @@ def second_line_input() -> (str, int):
                 except IOError:
                     print('filepath not real')
 
-def first_line_brains(phrase: str, type: int) -> {dict}:
+def first_line_brains(phrase: str, type: int) -> ({dict},str,str,bool):
     '''
     tells you what to do with the input. you input the phrase
     and the type and then you return the json dictionary of 
     the location
     '''
+    used_nom = False
     if type == 0:
         lat, long = nomlib.nominatim_search(phrase)
+        disp = nomlib.nominatim_display_search(phrase)
+        dict_to_return = wlib.weather_cords(lat, long)
+        used_nom = True
     elif type == 1:
         lat, long = nomlib.nominatim_file(phrase)
+        disp = nomlib.nominatim_display_file(phrase)
+        dict_to_return = phrase
     else:
         return None
-    
-    return(wlib.weather_cords(lat, long))
+    latlongprint = 'TARGET '
+    if float(lat) >= 0:
+        latlongprint += lat + '/N '
+    else:
+        latlongprint += str((-1.0)*float(lat)) + '/S '
 
-def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -> {dict}:
+    if float(long) >= 0:
+        latlongprint += long + '/E'
+    else:
+        latlongprint += str((-1.0)*float(long)) + '/W'
+
+    return(dict_to_return,latlongprint,disp,used_nom)
+
+def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -> ({dict},bool):
     '''
     given the dictionary found from the first line(origin point)
     tells you what type of weather (file or nws) is required
     and returns the corresponding hourly info
     '''
+    used_wsm = False
     if type == 0:
         ret = wlib.hour_info(first_line_json)
+        used_wsm = True
     elif type == 1:
         ret = wlib.hour_get_file(possible_phrase)
     else:
         return None
     
-    return ret
+    return (ret, used_wsm)
 
 def third_line_loopy() -> ((str, int)):
     '''
@@ -123,8 +131,52 @@ def third_line_loopy() -> ((str, int)):
             phrase = phrases[x]
             if phrase in upper_temp:
                 if phrase == phrases[5] and upper_temp == phrase:
-                    return ('done', 5)
+                    return ('NO MORE QUERIES', 5)
                 elif upper_temp.index(phrase) == 0:
                     return((inp[(len(phrase)):],x))
 
 
+def which_function(json_file: {dict}, third_line_input: str, third_line_int: int) -> str:
+    '''
+    just runs the actual functions and puts them in a format that kind of keeps
+    them for later. Also takes the timestamp and converts it to UTC and adds it 
+    to waht needs to be printed
+
+    '''
+    #
+    # i must say, the utc stuff is the worst. it's already in UTC (we can tell by the +00:00)
+    # and to make it Z is a little bit extra, is it not?! all of it will end in 00Z anyways,
+    # it all looks the same.
+
+    parts = third_line_input.split(' ')
+    # ind is index of the time
+    # printy is the part i should be printing.
+    match third_line_int:
+        case 0:
+            ind, printy = wlib.temperature_air(json_file, parts[0], int(parts[1]), parts[2])
+        case 1:
+            ind, printy = wlib.temperature_feels(json_file, parts[0], int(parts[1]), parts[2])
+        case 2:
+            ind, printy = wlib.humidity(json_file, int(parts[0]), parts[1])
+            printy += '%'
+        case 3:
+            ind, printy = wlib.wind(json_file, int(parts[0]), parts[1])
+            printy += ' mph'
+        case 4:
+            ind, printy = wlib.precip(json_file, int(parts[0]), parts[1])
+            printy += '%'
+        case 5:
+            ind = -1
+            printy = ''
+    
+
+    # PRINTS TIME. THIS TOOK ME AN HOUR
+    time_portion = json_file[ind]['startTime']
+    parsed_date = datetime.strptime(time_portion, "%Y-%m-%dT%H:%M:%S%z" ).timestamp()
+    time_utc = datetime.fromtimestamp(parsed_date, timezone.utc).isoformat()
+    print_time_utc = str(time_utc)[:-6]+'Z'
+    
+
+    toprint = print_time_utc + ' ' + printy
+
+    return(toprint)

@@ -31,7 +31,6 @@ def weather_cords(lat: float,long: float) -> {dict}:
 
     inbe = input_grid_id + '/' + str(input_grid_x) + ',' + str(input_grid_y)
     specifics_link = 'https://api.weather.gov/gridpoints/'+ inbe+'/forecast/hourly'
-    print(specifics_link)
 
     
     request_hourly = urllib.request.Request(specifics_link)
@@ -69,9 +68,9 @@ def convert(temp: float, desired_output: str) -> float:
     this works on the assumption that you do NOT have the
     type you currently want'''
     if desired_output == 'F':
-        return(round((temp * 9.0 / 5.0 + 32.0),2))
+        return(temp * 9.0 / 5.0 + 32.0)
     elif desired_output == 'C':
-        return(round(((temp - 32.0) * 5.0 / 9.0),2))
+        return((temp - 32.0) * 5.0 / 9.0)
     else:
         print('invalid desired output')
         return(None)
@@ -130,7 +129,7 @@ def package_to_return(special_index: int, val) -> tuple:
     else:
         return((special_index, val))
 
-def temperature_air(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> int:
+def temperature_air(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> (int,float):
     '''
     finds the max or minimum temperature over the given
     timescale. goes into the periods given and pulls all
@@ -151,7 +150,7 @@ def temperature_air(json_file: {dict}, temp_type: str, time_length: int, min_or_
     return package_to_return(index_to_record, ret)
 
 
-def temperature_feels(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> float:
+def temperature_feels(json_file: {dict}, temp_type: str, time_length: int, min_or_max: str) -> (int,float):
     '''
     given the periods, temp type, the time period, and max or min,
     applies the formula to each individual period to find what it
@@ -198,12 +197,16 @@ def temperature_feels(json_file: {dict}, temp_type: str, time_length: int, min_o
     
     return package_to_return(index_to_record, ret)
 
+# I want to make something clear - the humidity, wind and precip functions
+# all look pretty much the same. I'm aware of this. but in trying to min max it
+# and try to make it look more efficient, ill end up making the code look uglier
+# and it wont look as well put. so im leaving it as this. FIGHT ME!!!!
 
-def humidity(json_file: {dict}, time_length: int, min_or_max: str) -> str:
+def humidity(json_file: {dict}, time_length: int, min_or_max: str) -> (int,float):
     '''
     collects all the humidity values in teh time length asked for
-    and tehn finds either the minimum or maximum of the list.
-    returns it as the value + % cause it looks nice
+    and tehn finds either the minimum or maximum of the list. adds
+    % in later function
     '''
     humid_list = []
     index_to_record = 0
@@ -212,6 +215,36 @@ def humidity(json_file: {dict}, time_length: int, min_or_max: str) -> str:
         humid_list.append((period['relativeHumidity']['value']))
     
     index_to_record, ret = minmaxxingthis(humid_list, min_or_max)
-    
-    return package_to_return(index_to_record, (str(format(ret, '.4f')) + '%'))
+    return package_to_return(index_to_record, ret)
 
+def wind(json_file: {dict}, time_length: int, min_or_max: str) -> (int,float):
+    '''
+    collects all wind speeds in the time length asked for
+    and finds either max or min. adds the mph in later function
+    '''
+
+    wind_list = []
+    index_to_record = 0
+    for x in range(time_length):
+        period = json_file[x]
+        wind_list.append(float((period['windSpeed'].split(' ')[0])))
+    
+    index_to_record, ret = minmaxxingthis(wind_list, min_or_max)
+    return package_to_return(index_to_record, ret)
+
+
+def precip(json_file: {dict}, time_length: int, min_or_max: str) -> (int,float):
+    '''
+    i hate spelling precipitiation . its not real
+    collects all the precip chances in time length asked for
+    and finds either the max or min. ill add percents later
+    '''
+
+    precip_list = []
+    index_to_record = 0
+    for x in range(time_length):
+        period = json_file[x]
+        precip_list.append(float(period['probabilityOfPrecipitation']['value']))
+    
+    index_to_record, ret = minmaxxingthis(precip_list, min_or_max)
+    return package_to_return(index_to_record, ret)
