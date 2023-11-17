@@ -1,6 +1,4 @@
 import interactions as inter
-import weather_lib as wlib
-import nominatim_lib as nomlib
 
 if __name__ == '__main__':
     toprint = ''
@@ -8,7 +6,7 @@ if __name__ == '__main__':
     rev_geo_open = False
     nws_use = False
     first_phrase, type = inter.first_line_input()
-    first_result, latlong, disp, for_geo_open = inter.first_line_brains(first_phrase, type)
+    first_result, lat, long, for_geo_open = inter.first_line_brains(first_phrase, type)
 
     second_phrase, type = inter.second_line_input()
     second_result,nws_use = inter.second_line_brains(first_result, type, second_phrase)
@@ -24,9 +22,12 @@ if __name__ == '__main__':
         toprint += inter.which_function(second_result, one, two) + '\n'
         one, two = inter.third_line_loopy()
     
-    print(latlong + '\n' + disp)
+    
+    rev_phrase, type = inter.reverse_end()
+    rev_disp, rev_geo_open = inter.reverse_brains(type, rev_phrase, lat, long)
+    print(inter.lat_long_target(lat,long) + '\n' +rev_disp)
     print(toprint)
-    print(str(for_geo_open) + '\n' + str(rev_geo_open) + '\n' + str(nws_use))
+    inter.attribution_messages(for_geo_open, rev_geo_open, nws_use)
 
 
     

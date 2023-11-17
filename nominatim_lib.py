@@ -44,19 +44,25 @@ def nominatim_file(inp:str ) -> (float, float):
     f.close()
     return((stuff['lat'],stuff['lon']))
 
-def nominatim_display_search(inp: str) -> str:
-    '''
-    from the nominatim_info function, returns the display
-    '''
-    nom_dict = nominatim_info(inp)
-    return(nom_dict['display_name'])
+def rev_nominatim_search(long: float, lat: float):
+    searchup = 'https://nominatim.openstreetmap.org/reverse?lat='+ long + '&lon=' + lat + '&format=json'
+    
+    try:
+        request = urllib.request.Request(searchup)
+        response = urllib.request.urlopen(request)
+        data = response.read()
 
-def nominatim_display_file(inp: str) -> str:
-    '''
-    from the nominatim_info function, returns the display
-    '''
-    f = open(inp, "r")
-    stuff = dict(json.loads(f.read()[1:-1]))
+        stuff = dict(json.loads(data.decode(encoding = 'utf-8')))
+        
+        response.close()
+        return stuff['display_name']
+    except:
+        print('FAILED')
+
+def rev_nominatim_file(filepa: str) -> str:
+    f = open(filepa, "r")
+    stuff = dict(json.loads(f.read()))
 
     f.close()
-    return(stuff['display_name'])
+
+    return stuff['display_name']

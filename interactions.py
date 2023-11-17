@@ -69,15 +69,20 @@ def first_line_brains(phrase: str, type: int) -> ({dict},str,str,bool):
     used_nom = False
     if type == 0:
         lat, long = nomlib.nominatim_search(phrase)
-        disp = nomlib.nominatim_display_search(phrase)
         dict_to_return = wlib.weather_cords(lat, long)
         used_nom = True
     elif type == 1:
         lat, long = nomlib.nominatim_file(phrase)
-        disp = nomlib.nominatim_display_file(phrase)
         dict_to_return = phrase
     else:
         return None
+    
+    return(dict_to_return,lat ,long,used_nom)
+
+def lat_long_target(lat: float, long: float)->str:
+    '''
+    so you can print it later
+    '''
     latlongprint = 'TARGET '
     if float(lat) >= 0:
         latlongprint += lat + '/N '
@@ -89,7 +94,7 @@ def first_line_brains(phrase: str, type: int) -> ({dict},str,str,bool):
     else:
         latlongprint += str((-1.0)*float(long)) + '/W'
 
-    return(dict_to_return,latlongprint,disp,used_nom)
+    return latlongprint
 
 def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -> ({dict},bool):
     '''
@@ -180,3 +185,58 @@ def which_function(json_file: {dict}, third_line_input: str, third_line_int: int
     toprint = print_time_utc + ' ' + printy
 
     return(toprint)
+
+
+def reverse_end()-> (str, int):
+    '''
+    returns the request plus whether it is a file
+    or a search request.
+    0 - search
+    1 - file
+    '''
+    phrase_location = 'REVERSE NOMINATIM'
+    phrase_file = 'REVERSE FILE '
+
+    while True:
+        
+        inp = input()
+        upper_temp = inp.upper()
+        
+        if phrase_location in upper_temp:
+            if upper_temp.index(phrase_location) == 0:
+                return(inp[(len(phrase_location)):],0)
+        
+        if phrase_file in upper_temp:
+            if upper_temp.index(phrase_file) == 0:
+                try:
+                    open(inp[len(phrase_file):], "r")
+                    return(inp[len(phrase_file):],1)
+                except IOError:
+                    print('filepath not real')
+
+def reverse_brains(type: int, phrase: str, lat: float, long: float) -> (str, bool):
+    '''
+    determines whether the reverse is a file or a link and gets the
+    complementary display name.
+    '''
+    used_rev_nom = False
+    if type == 0:
+        disp = nomlib.rev_nominatim_search(lat, long)
+        used_rev_nom = True
+    elif type == 1:
+        disp = nomlib.rev_nominatim_file(phrase)
+    else:
+        return None
+    
+    return(disp,used_rev_nom)
+
+def attribution_messages(for_geo: bool, rev_geo: bool, nws_use: bool):
+    '''
+    wraps up output with attribution messages
+    '''
+    if for_geo:
+        print('\t**Forward geocoding data from OpenStreetMap')
+    if rev_geo:
+        print('\t**Reverse geocoding data from OpenStreetMap')
+    if nws_use:
+        print('\t**Real-time weather data from National Weather Service, United States Department of Commerce')
