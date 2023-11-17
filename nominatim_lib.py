@@ -35,8 +35,8 @@ def nominatim_file(inp:str ) -> (float, float):
     '''
     f = open(inp, "r")
     stuff = dict(json.loads(f.read()[1:-1]))
-    for x in stuff:
-        print(x + '\t\t' + str(stuff[x]))
+    # for x in stuff:
+    #     print(x + '\t\t' + str(stuff[x]))
 
     f.close()
     return((stuff['lat'],stuff['lon']))
