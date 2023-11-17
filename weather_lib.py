@@ -12,7 +12,7 @@ def weather_cords(lat: float,long: float) -> {dict}:
     hourly information function can work for both files and
     online requests
     '''
-    original_request = 'https://api.weather.gov/points/'+str(round(lat,4))+','+str(round(long,4))
+    original_request = 'https://api.weather.gov/points/'+str(round(float(lat),4))+','+str(round(float(long),4))
     
     request_points = urllib.request.Request(original_request)
     response_points = urllib.request.urlopen(request_points)
@@ -31,7 +31,7 @@ def weather_cords(lat: float,long: float) -> {dict}:
 
     inbe = input_grid_id + '/' + str(input_grid_x) + ',' + str(input_grid_y)
     specifics_link = 'https://api.weather.gov/gridpoints/'+ inbe+'/forecast/hourly'
-    print(specifics_link)
+    # print(specifics_link)
 
     
     request_hourly = urllib.request.Request(specifics_link)

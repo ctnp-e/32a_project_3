@@ -21,9 +21,6 @@ def nominatim_search(inp: str) -> (float, float):
     data = response.read()
 
     stuff = dict(json.loads(data.decode(encoding = 'utf-8')[1:-1]))
-    
-    # for x in stuff:
-    #     print(x + '\t\t' + str(stuff[x]))
 
     response.close()
     return((stuff['lat'],stuff['lon']))
@@ -35,8 +32,6 @@ def nominatim_file(inp:str ) -> (float, float):
     '''
     f = open(inp, "r")
     stuff = dict(json.loads(f.read()[1:-1]))
-    # for x in stuff:
-    #     print(x + '\t\t' + str(stuff[x]))
 
     f.close()
     return((stuff['lat'],stuff['lon']))
