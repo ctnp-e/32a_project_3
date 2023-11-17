@@ -21,8 +21,8 @@ def first_line_input() -> (str, int):
     0 - ocation
     1 - filepath
     '''
-    phrase_location = 'TARGET NOMINATIM'
-    phrase_file = 'TARGET FILE'
+    phrase_location = 'TARGET NOMINATIM '
+    phrase_file = 'TARGET FILE '
 
     while True:
         
@@ -51,7 +51,7 @@ def second_line_input() -> (str, int):
     1 - filepath
     '''
     phrase_location = 'WEATHER NWS'
-    phrase_file = 'WEATHER FILE'
+    phrase_file = 'WEATHER FILE '
 
     while True:
         
@@ -72,7 +72,9 @@ def second_line_input() -> (str, int):
 
 def first_line_brains(phrase: str, type: int) -> {dict}:
     '''
-    tells you what to do with the input
+    tells you what to do with the input. you input the phrase
+    and the type and then you return the json dictionary of 
+    the location
     '''
     if type == 0:
         lat, long = nomlib.nominatim_search(phrase)
@@ -84,6 +86,11 @@ def first_line_brains(phrase: str, type: int) -> {dict}:
     return(wlib.weather_cords(lat, long))
 
 def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -> {dict}:
+    '''
+    given the dictionary found from the first line(origin point)
+    tells you what type of weather (file or nws) is required
+    and returns the corresponding hourly info
+    '''
     if type == 0:
         ret = wlib.hour_info(first_line_json)
     elif type == 1:
@@ -92,5 +99,32 @@ def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -
         return None
     
     return ret
+
+def third_line_loopy() -> ((str, int)):
+    '''
+    (follows, phrase value)
+    returns whatever follows the chosen phrase
+    as well as the value of the phrase. to be used
+    in other functions
+    0 - TEMPERATURE AIR 
+    1 - TEMPERATURE FEELS 
+    2 - HUMIDITY
+    3 - WIND
+    4 - PRECIPITATION
+    5 - NO MORE QUERIES
+    '''
+
+    phrases = ['TEMPERATURE AIR ','TEMPERATURE FEELS ','HUMIDITY ','WIND ','PRECIPITATION ','NO MORE QUERIES']
+
+    while True:
+        inp = input().strip()
+        upper_temp = inp.upper()
+        for x in range(len(phrases)):
+            phrase = phrases[x]
+            if phrase in upper_temp:
+                if phrase == phrases[5] and upper_temp == phrase:
+                    return ('done', 5)
+                elif upper_temp.index(phrase) == 0:
+                    return((inp[(len(phrase)):],x))
 
 
