@@ -1,5 +1,8 @@
 import json
 import urllib.request
+import server_pain as serv
+
+NOMINATIM_HEADER = {'Referer' : 'https://www.ics.uci.edu/~thornton/ics32a/ProjectGuide/Project3/mmivanov'}
 
 def nominatim_info(inp:str) -> {dict}:
     '''
@@ -13,17 +16,9 @@ def nominatim_info(inp:str) -> {dict}:
 
     it = ((res.replace(' ', '+')).replace(',', '%2C')).replace('\'', '%27')
     result = searchup + it + '&format=json'
-    try:
-        request = urllib.request.Request(result)
-        response = urllib.request.urlopen(request)
-        data = response.read()
-
-        stuff = dict(json.loads(data.decode(encoding = 'utf-8')[1:-1]))
-        
-        response.close()
-        return stuff
-    except:
-        print('FAILED')
+    
+    stuff = serv.get_json(result, NOMINATIM_HEADER)
+    return stuff
 
 def nominatim_search(inp: str) -> (float, float):
     '''
@@ -38,31 +33,19 @@ def nominatim_file(inp:str ) -> (float, float):
     this is for debugging. serves the same purpose as 
     nominatim_search but for a specific file.
     '''
-    f = open(inp, "r")
-    stuff = dict(json.loads(f.read()[1:-1]))
 
-    f.close()
+    stuff = serv.open_file(inp)
+
     return((stuff['lat'],stuff['lon']))
 
 def rev_nominatim_search(long: float, lat: float):
     searchup = 'https://nominatim.openstreetmap.org/reverse?lat='+ long + '&lon=' + lat + '&format=json'
     
-    try:
-        request = urllib.request.Request(searchup)
-        response = urllib.request.urlopen(request)
-        data = response.read()
-
-        stuff = dict(json.loads(data.decode(encoding = 'utf-8')))
-        
-        response.close()
-        return stuff['display_name']
-    except:
-        print('FAILED')
+    stuff = serv.get_json(searchup, NOMINATIM_HEADER)
+    return stuff['display_name']
+    
 
 def rev_nominatim_file(filepa: str) -> str:
-    f = open(filepa, "r")
-    stuff = dict(json.loads(f.read()))
 
-    f.close()
-
+    stuff = serv.open_file(filepa)
     return stuff['display_name']

@@ -1,9 +1,9 @@
 import nominatim_lib as nomlib
 import weather_lib as wlib
 from datetime import datetime, timezone
+import server_pain as serv
 
-
-def first_line_input() -> (str, int):
+def first_line_input(inp: str) -> (str, int):
     '''
     (file or location, type)
     This will return the original phrase, as well as 
@@ -14,24 +14,19 @@ def first_line_input() -> (str, int):
     phrase_location = 'TARGET NOMINATIM '
     phrase_file = 'TARGET FILE '
 
-    while True:
-        
-        inp = input()
-        upper_temp = inp.upper()
-        
-        if phrase_location in upper_temp:
-            if upper_temp.index(phrase_location) == 0:
-                return((inp[17:],0))
-        
-        if phrase_file in upper_temp:
-            if upper_temp.index(phrase_file) == 0:
-                try:
-                    open(inp[12:], "r")
-                    return((inp[12:],1))
-                except IOError:
-                    print('filepath not real')
+    inp = inp.strip()
+    upper_temp = inp.upper()
+    
+    if phrase_location in upper_temp:
+        if upper_temp.index(phrase_location) == 0:
+            return((inp[17:],0))
+    
+    if phrase_file in upper_temp:
+        if upper_temp.index(phrase_file) == 0:
+            serv.open_file(inp[12:])
+            return(((inp[12:]),1))
                 
-def second_line_input() -> (str, int):
+def second_line_input(inp:str) -> (str, int):
     '''
     (file or location, type)
     This is the same as the first input essentially,
@@ -43,22 +38,18 @@ def second_line_input() -> (str, int):
     phrase_location = 'WEATHER NWS'
     phrase_file = 'WEATHER FILE '
 
-    while True:
-        
-        inp = input()
-        upper_temp = inp.upper()
-        
-        if phrase_location in upper_temp:
-            if upper_temp.index(phrase_location) == 0:
-                return(('nws_go_go_go',0)) # empty because nothing 
-        
-        if phrase_file in upper_temp:
-            if upper_temp.index(phrase_file) == 0:
-                try:
-                    open(inp[13:], "r")
-                    return((inp[13:],1))
-                except IOError:
-                    print('filepath not real')
+    inp = inp.strip()
+    upper_temp = inp.upper()
+    
+    if phrase_location in upper_temp:
+        if upper_temp.index(phrase_location) == 0:
+            # serv.get_json('https://nominatim.openstreetmap.org/search?q=TEST_INTERNET&format=json',{'Referer' : 'https://www.ics.uci.edu/~thornton/ics32a/ProjectGuide/Project3/mmivanov'})
+            return(('nws_go_go_go',0)) # empty because nothing 
+    
+    if phrase_file in upper_temp:
+        if upper_temp.index(phrase_file) == 0:
+            serv.open_file(inp[13:])
+            return((inp[13:],1))
 
 def first_line_brains(phrase: str, type: int) -> ({dict},str,str,bool):
     '''
@@ -113,7 +104,7 @@ def second_line_brains(first_line_json: {dict}, type:int, possible_phrase:str) -
     
     return (ret, used_wsm)
 
-def third_line_loopy() -> ((str, int)):
+def third_line_loopy(inp:str) -> ((str, int)):
     '''
     (follows, phrase value)
     returns whatever follows the chosen phrase
@@ -129,16 +120,15 @@ def third_line_loopy() -> ((str, int)):
 
     phrases = ['TEMPERATURE AIR ','TEMPERATURE FEELS ','HUMIDITY ','WIND ','PRECIPITATION ','NO MORE QUERIES']
 
-    while True:
-        inp = input().strip()
-        upper_temp = inp.upper()
-        for x in range(len(phrases)):
-            phrase = phrases[x]
-            if phrase in upper_temp:
-                if phrase == phrases[5] and upper_temp == phrase:
-                    return ('NO MORE QUERIES', 5)
-                elif upper_temp.index(phrase) == 0:
-                    return((inp[(len(phrase)):],x))
+    inp = inp.strip()
+    upper_temp = inp.upper()
+    for x in range(len(phrases)):
+        phrase = phrases[x]
+        if phrase in upper_temp:
+            if phrase == phrases[5] and upper_temp == phrase:
+                return ('NO MORE QUERIES', 5)
+            elif upper_temp.index(phrase) == 0:
+                return((inp[(len(phrase)):],x))
 
 
 def which_function(json_file: {dict}, third_line_input: str, third_line_int: int) -> str:
@@ -177,9 +167,10 @@ def which_function(json_file: {dict}, third_line_input: str, third_line_int: int
 
     # PRINTS TIME. THIS TOOK ME AN HOUR
     time_portion = json_file[ind]['startTime']
+    
     parsed_date = datetime.strptime(time_portion, "%Y-%m-%dT%H:%M:%S%z" ).timestamp()
     time_utc = datetime.fromtimestamp(parsed_date, timezone.utc).isoformat()
-    print_time_utc = str(time_utc)[:-6]+'Z'
+    print_time_utc = (time_utc).replace('+00:00', 'Z')
     
 
     toprint = print_time_utc + ' ' + printy
@@ -187,7 +178,7 @@ def which_function(json_file: {dict}, third_line_input: str, third_line_int: int
     return(toprint)
 
 
-def reverse_end()-> (str, int):
+def reverse_end(inp: str)-> (str, int):
     '''
     returns the request plus whether it is a file
     or a search request.
@@ -197,22 +188,17 @@ def reverse_end()-> (str, int):
     phrase_location = 'REVERSE NOMINATIM'
     phrase_file = 'REVERSE FILE '
 
-    while True:
-        
-        inp = input()
-        upper_temp = inp.upper()
-        
-        if phrase_location in upper_temp:
-            if upper_temp.index(phrase_location) == 0:
-                return(inp[(len(phrase_location)):],0)
-        
-        if phrase_file in upper_temp:
-            if upper_temp.index(phrase_file) == 0:
-                try:
-                    open(inp[len(phrase_file):], "r")
-                    return(inp[len(phrase_file):],1)
-                except IOError:
-                    print('filepath not real')
+    inp = inp.strip()
+    upper_temp = inp.upper()
+    
+    if phrase_location in upper_temp:
+        if upper_temp.index(phrase_location) == 0:
+            return(inp[(len(phrase_location)):],0)
+    
+    if phrase_file in upper_temp:
+        if upper_temp.index(phrase_file) == 0:
+            serv.open_file(inp[len(phrase_file):])
+            return(inp[len(phrase_file):],1)
 
 def reverse_brains(type: int, phrase: str, lat: float, long: float) -> (str, bool):
     '''

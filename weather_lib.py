@@ -1,6 +1,10 @@
-
 import json
 import urllib.request
+import server_pain as serv
+
+
+WEATHER_HEADER = {'User-Agent': '(https://www.ics.uci.edu/~thornton/ics32a/ProjectGuide/Project3, mmivanov@uci.edu)','Accept' : 'application/geo+json'}
+
 
 def weather_cords(lat: float,long: float) -> {dict}:
     '''
@@ -14,11 +18,7 @@ def weather_cords(lat: float,long: float) -> {dict}:
     '''
     original_request = 'https://api.weather.gov/points/'+str(round(float(lat),4))+','+str(round(float(long),4))
     
-    request_points = urllib.request.Request(original_request)
-    response_points = urllib.request.urlopen(request_points)
-    data_points = response_points.read()
-    
-    points_json = dict(json.loads(data_points.decode(encoding = 'utf-8')))
+    points_json = serv.get_json(original_request,WEATHER_HEADER)
     
     # print(get+'\n'+got)
 
@@ -27,19 +27,12 @@ def weather_cords(lat: float,long: float) -> {dict}:
     input_grid_y = location_properties['gridY']
     input_grid_id = location_properties['gridId']
 
-    response_points.close()
 
     inbe = input_grid_id + '/' + str(input_grid_x) + ',' + str(input_grid_y)
     specifics_link = 'https://api.weather.gov/gridpoints/'+ inbe+'/forecast/hourly'
 
+    hourly_json = serv.get_json(specifics_link, WEATHER_HEADER)
     
-    request_hourly = urllib.request.Request(specifics_link)
-    response_hourly = urllib.request.urlopen(request_hourly)
-    hourly = response_hourly.read()
-
-    hourly_json = dict(json.loads(hourly.decode(encoding = 'utf-8')))
-    # print(hourly_json)
-    response_hourly.close()
     return hourly_json
 
 
@@ -57,9 +50,8 @@ def hour_get_file(file_loc: str) -> {dict}:
     compatible with the hour_info function, so I can use this for
     testing my file instead of only online usability
     '''
-    f = open(file_loc, "r")
-    stuff = dict(json.loads(f.read()))
-    return hour_info(stuff)
+    f = serv.open_file(file_loc)
+    return hour_info(f)
 
 def convert(temp: float, desired_output: str) -> float:
     '''
